@@ -46,21 +46,24 @@ public:
 	~Defender();
 
 	/// Update the defender state.
-	void Update();
+	void Update(double t);
 	/// Render the defender.
-	void Render(float dp_ratio);
+	void Render(float dp_ratio, Rml::TextureHandle texture);
 
 	/// Move the defender left.
 	void StartMove(float direction);	
 	/// Stop the movement.
 	void StopMove(float direction);
 	/// Fire a bullet (if one isn't already in flight).
-	void Fire();	
+	void Fire();
 
 	/// Check if an object at the given position would hit the defender.
-	bool CheckHit(const Rml::Vector2f& position);
+	bool CheckHit(double t, const Rml::Vector2f& position);
 
 private:
+	/// Update the bullet, doing collision detection.
+	void UpdateBullet(double t);
+
 	Game* game;
 	Rml::Vector2f position;	
 	
