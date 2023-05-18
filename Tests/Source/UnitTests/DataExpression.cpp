@@ -4,7 +4,7 @@
  * For the latest information, see http://github.com/mikke89/RmlUi
  *
  * Copyright (c) 2008-2010 CodePoint Ltd, Shift Technology Ltd
- * Copyright (c) 2019 The RmlUi Team, and contributors
+ * Copyright (c) 2019-2023 The RmlUi Team, and contributors
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,7 +34,7 @@
 using namespace Rml;
 
 static DataTypeRegister type_register;
-static DataModel model(type_register.GetTransformFuncRegister());
+static DataModel model(&type_register);
 static DataExpressionInterface interface(&model, nullptr);
 
 static String TestExpression(const String& expression)
@@ -94,7 +94,7 @@ TEST_CASE("Data expressions")
 	String color_name = "color";
 	Colourb color_value = Colourb(180, 100, 255);
 
-	DataModelConstructor constructor(&model, &type_register);
+	DataModelConstructor constructor(&model);
 	constructor.Bind("radius", &radius);
 	constructor.Bind("color_name", &color_name);
 	constructor.Bind("num_trolls", &num_trolls);

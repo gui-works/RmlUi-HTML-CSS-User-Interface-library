@@ -4,7 +4,7 @@
  * For the latest information, see http://github.com/mikke89/RmlUi
  *
  * Copyright (c) 2008-2010 CodePoint Ltd, Shift Technology Ltd
- * Copyright (c) 2019 The RmlUi Team, and contributors
+ * Copyright (c) 2019-2023 The RmlUi Team, and contributors
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +30,7 @@
 #include <RmlUi/Core/Context.h>
 #include <RmlUi/Core/Input.h>
 #include <RmlUi/Core/Log.h>
+#include <RmlUi/Core/StringUtilities.h>
 #include <RmlUi/Core/SystemInterface.h>
 #include <GLFW/glfw3.h>
 
@@ -75,6 +76,8 @@ void SystemInterface_GLFW::SetMouseCursor(const Rml::String& cursor_name)
 		cursor = cursor_text;
 	else if (cursor_name == "unavailable")
 		cursor = nullptr;
+	else if (Rml::StringUtilities::StartsWith(cursor_name, "rmlui-scroll"))
+		cursor = cursor_pointer;
 
 	if (window)
 		glfwSetCursor(window, cursor);
@@ -107,9 +110,7 @@ bool RmlGLFW::ProcessKeyCallback(Rml::Context* context, int key, int action, int
 		if (key == GLFW_KEY_ENTER || key == GLFW_KEY_KP_ENTER)
 			result &= context->ProcessTextInput('\n');
 		break;
-	case GLFW_RELEASE:
-		result = context->ProcessKeyUp(RmlGLFW::ConvertKey(key), RmlGLFW::ConvertKeyModifiers(mods));
-		break;
+	case GLFW_RELEASE: result = context->ProcessKeyUp(RmlGLFW::ConvertKey(key), RmlGLFW::ConvertKeyModifiers(mods)); break;
 	}
 
 	return result;
@@ -152,12 +153,8 @@ bool RmlGLFW::ProcessMouseButtonCallback(Rml::Context* context, int button, int 
 
 	switch (action)
 	{
-	case GLFW_PRESS:
-		result = context->ProcessMouseButtonDown(button, RmlGLFW::ConvertKeyModifiers(mods));
-		break;
-	case GLFW_RELEASE:
-		result = context->ProcessMouseButtonUp(button, RmlGLFW::ConvertKeyModifiers(mods));
-		break;
+	case GLFW_PRESS: result = context->ProcessMouseButtonDown(button, RmlGLFW::ConvertKeyModifiers(mods)); break;
+	case GLFW_RELEASE: result = context->ProcessMouseButtonUp(button, RmlGLFW::ConvertKeyModifiers(mods)); break;
 	}
 	return result;
 }

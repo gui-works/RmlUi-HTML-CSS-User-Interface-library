@@ -4,7 +4,7 @@
  * For the latest information, see http://github.com/mikke89/RmlUi
  *
  * Copyright (c) 2008-2010 CodePoint Ltd, Shift Technology Ltd
- * Copyright (c) 2019 The RmlUi Team, and contributors
+ * Copyright (c) 2019-2023 The RmlUi Team, and contributors
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,7 @@
 #include "RmlUi_Platform_SFML.h"
 #include <RmlUi/Core/Context.h>
 #include <RmlUi/Core/Input.h>
+#include <RmlUi/Core/StringUtilities.h>
 #include <RmlUi/Core/SystemInterface.h>
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
@@ -75,6 +76,8 @@ void SystemInterface_SFML::SetMouseCursor(const Rml::String& cursor_name)
 			cursor = &cursor_text;
 		else if (cursor_name == "unavailable")
 			cursor = &cursor_unavailable;
+		else if (Rml::StringUtilities::StartsWith(cursor_name, "rmlui-scroll"))
+			cursor = &cursor_move;
 
 		if (cursor)
 			window->setMouseCursor(*cursor);
@@ -97,21 +100,11 @@ bool RmlSFML::InputHandler(Rml::Context* context, sf::Event& ev)
 
 	switch (ev.type)
 	{
-	case sf::Event::MouseMoved:
-		result = context->ProcessMouseMove(ev.mouseMove.x, ev.mouseMove.y, RmlSFML::GetKeyModifierState());
-		break;
-	case sf::Event::MouseButtonPressed:
-		result = context->ProcessMouseButtonDown(ev.mouseButton.button, RmlSFML::GetKeyModifierState());
-		break;
-	case sf::Event::MouseButtonReleased:
-		result = context->ProcessMouseButtonUp(ev.mouseButton.button, RmlSFML::GetKeyModifierState());
-		break;
-	case sf::Event::MouseWheelMoved:
-		result = context->ProcessMouseWheel(float(-ev.mouseWheel.delta), RmlSFML::GetKeyModifierState());
-		break;
-	case sf::Event::MouseLeft:
-		result = context->ProcessMouseLeave();
-		break;
+	case sf::Event::MouseMoved: result = context->ProcessMouseMove(ev.mouseMove.x, ev.mouseMove.y, RmlSFML::GetKeyModifierState()); break;
+	case sf::Event::MouseButtonPressed: result = context->ProcessMouseButtonDown(ev.mouseButton.button, RmlSFML::GetKeyModifierState()); break;
+	case sf::Event::MouseButtonReleased: result = context->ProcessMouseButtonUp(ev.mouseButton.button, RmlSFML::GetKeyModifierState()); break;
+	case sf::Event::MouseWheelMoved: result = context->ProcessMouseWheel(float(-ev.mouseWheel.delta), RmlSFML::GetKeyModifierState()); break;
+	case sf::Event::MouseLeft: result = context->ProcessMouseLeave(); break;
 	case sf::Event::TextEntered:
 	{
 		Rml::Character character = Rml::Character(ev.text.unicode);
@@ -122,14 +115,9 @@ bool RmlSFML::InputHandler(Rml::Context* context, sf::Event& ev)
 			result = context->ProcessTextInput(character);
 	}
 	break;
-	case sf::Event::KeyPressed:
-		result = context->ProcessKeyDown(RmlSFML::ConvertKey(ev.key.code), RmlSFML::GetKeyModifierState());
-		break;
-	case sf::Event::KeyReleased:
-		result = context->ProcessKeyUp(RmlSFML::ConvertKey(ev.key.code), RmlSFML::GetKeyModifierState());
-		break;
-	default:
-		break;
+	case sf::Event::KeyPressed: result = context->ProcessKeyDown(RmlSFML::ConvertKey(ev.key.code), RmlSFML::GetKeyModifierState()); break;
+	case sf::Event::KeyReleased: result = context->ProcessKeyUp(RmlSFML::ConvertKey(ev.key.code), RmlSFML::GetKeyModifierState()); break;
+	default: break;
 	}
 
 	return result;

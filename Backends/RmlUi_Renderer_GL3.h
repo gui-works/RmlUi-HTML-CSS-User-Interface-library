@@ -4,7 +4,7 @@
  * For the latest information, see http://github.com/mikke89/RmlUi
  *
  * Copyright (c) 2008-2010 CodePoint Ltd, Shift Technology Ltd
- * Copyright (c) 2019 The RmlUi Team, and contributors
+ * Copyright (c) 2019-2023 The RmlUi Team, and contributors
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -91,6 +91,39 @@ private:
 	int viewport_height = 0;
 
 	Rml::UniquePtr<Gfx::ShadersData> shaders;
+
+	struct GLStateBackup {
+		bool enable_cull_face;
+		bool enable_blend;
+		bool enable_stencil_test;
+		bool enable_scissor_test;
+
+		int viewport[4];
+		int scissor[4];
+
+		int stencil_clear_value;
+		float color_clear_value[4];
+
+		int blend_equation_rgb;
+		int blend_equation_alpha;
+		int blend_src_rgb;
+		int blend_dst_rgb;
+		int blend_src_alpha;
+		int blend_dst_alpha;
+
+		struct Stencil {
+			int func;
+			int ref;
+			int value_mask;
+			int writemask;
+			int fail;
+			int pass_depth_fail;
+			int pass_depth_pass;
+		};
+		Stencil stencil_front;
+		Stencil stencil_back;
+	};
+	GLStateBackup glstate_backup = {};
 };
 
 /**
