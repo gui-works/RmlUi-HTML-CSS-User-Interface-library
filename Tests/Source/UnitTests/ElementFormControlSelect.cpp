@@ -216,7 +216,7 @@ TEST_CASE("form.select.value")
 	TestsShell::ShutdownShell();
 }
 
-TEST_CASE("form.select.databinding")
+TEST_CASE("form.select.data_binding")
 {
 	Context* context = TestsShell::GetContext();
 	REQUIRE(context);
@@ -296,6 +296,14 @@ TEST_CASE("form.select.databinding")
 			</select>
 			)",
 			"2", "C"},
+
+		{
+			R"(
+			<select data-value="selected_index">
+				 <option data-for="s : subjects" data-attr-value="it_index"><p data-rml="s | to_upper"></p></option>
+			</select>
+			)",
+			"2", "<p data-rml=\"s | to_upper\">C</p>"},
 	};
 
 	DataModelConstructor constructor = context->CreateDataModel("select-test");

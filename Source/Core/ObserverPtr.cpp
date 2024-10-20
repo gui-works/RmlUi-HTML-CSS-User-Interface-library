@@ -27,35 +27,57 @@
  */
 
 #include "../../Include/RmlUi/Core/ObserverPtr.h"
+#include "../../Include/RmlUi/Core/Log.h"
+#include "ControlledLifetimeResource.h"
 #include "Pool.h"
 
 namespace Rml {
 
-// The ObserverPtrBlock pool
-Pool<ObserverPtrBlock>* observerPtrBlockPool = nullptr;
+struct ObserverPtrData {
+	bool is_shutdown = false;
+	Pool<Detail::ObserverPtrBlock> block_pool{128, true};
+};
+static ControlledLifetimeResource<ObserverPtrData> observer_ptr_data;
 
-static Pool<ObserverPtrBlock>& GetPool()
-{
-	// Wrap pool in a function to ensure it is initialized before use.
-	// This pool must outlive all other global variables that derive from EnableObserverPtr. This even includes
-	// user variables which we have no control over. For this reason, we intentionally let this leak.
-	if (observerPtrBlockPool == nullptr)
-		observerPtrBlockPool = new Pool<ObserverPtrBlock>(128, true);
-	return *observerPtrBlockPool;
-}
-
-void DeallocateObserverPtrBlockIfEmpty(ObserverPtrBlock* block)
+void Detail::DeallocateObserverPtrBlockIfEmpty(ObserverPtrBlock* block)
 {
 	RMLUI_ASSERT(block->num_observers >= 0);
 	if (block->num_observers == 0 && block->pointed_to_object == nullptr)
 	{
-		GetPool().DestroyAndDeallocate(block);
+		observer_ptr_data->block_pool.DestroyAndDeallocate(block);
+		if (observer_ptr_data->is_shutdown && observer_ptr_data->block_pool.GetNumAllocatedObjects() == 0)
+		{
+			observer_ptr_data.Shutdown();
+		}
+	}
+}
+void Detail::InitializeObserverPtrPool()
+{
+	observer_ptr_data.InitializeIfEmpty();
+	observer_ptr_data->is_shutdown = false;
+}
+
+void Detail::ShutdownObserverPtrPool()
+{
+	const int num_objects = observer_ptr_data->block_pool.GetNumAllocatedObjects();
+	if (num_objects == 0)
+	{
+		observer_ptr_data.Shutdown();
+	}
+	else
+	{
+		// This pool must outlive all other global variables that derive from EnableObserverPtr. This even includes user
+		// variables which we have no control over. So if there are any objects still alive, let the pool garbage
+		// collect itself when all references to it are gone. It is somewhat unreasonable to expect that no observer
+		// pointers remain, particularly because that means no objects derived from Rml::EventListener can be alive in
+		// user space, which can be a hassle to ensure and is otherwise pretty innocent.
+		observer_ptr_data->is_shutdown = true;
 	}
 }
 
-ObserverPtrBlock* AllocateObserverPtrBlock()
+Detail::ObserverPtrBlock* Detail::AllocateObserverPtrBlock()
 {
-	return GetPool().AllocateAndConstruct();
+	return observer_ptr_data->block_pool.AllocateAndConstruct();
 }
 
 } // namespace Rml

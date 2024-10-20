@@ -30,6 +30,7 @@
 #define RMLUI_CORE_TRAITS_H
 
 #include "../Config/Config.h"
+#include "Debug.h"
 #include "Header.h"
 #include <type_traits>
 
@@ -94,7 +95,7 @@ public:
 
 } // namespace Rml
 
-#ifdef RMLUI_USE_CUSTOM_RTTI
+#ifdef RMLUI_CUSTOM_RTTI
 
 	#define RMLUI_RTTI_Define(_NAME_)                             \
 		using RttiClassType = _NAME_;                             \
@@ -136,6 +137,13 @@ Derived rmlui_dynamic_cast(Base base_instance)
 		return nullptr;
 }
 
+template <class Derived, class Base>
+Derived rmlui_static_cast(Base base_instance)
+{
+	static_assert(std::is_pointer<Derived>::value && std::is_pointer<Base>::value, "rmlui_static_cast can only cast pointer types");
+	return static_cast<Derived>(base_instance);
+}
+
 template <class T>
 const char* rmlui_type_name(const T& /*var*/)
 {
@@ -162,6 +170,14 @@ Derived rmlui_dynamic_cast(Base base_instance)
 	return dynamic_cast<Derived>(base_instance);
 }
 
+template <class Derived, class Base>
+Derived rmlui_static_cast(Base base_instance)
+{
+	static_assert(std::is_pointer<Derived>::value && std::is_pointer<Base>::value, "rmlui_static_cast can only cast pointer types");
+	RMLUI_ASSERT(dynamic_cast<Derived>(base_instance));
+	return static_cast<Derived>(base_instance);
+}
+
 template <class T>
 const char* rmlui_type_name(const T& var)
 {
@@ -174,6 +190,6 @@ const char* rmlui_type_name()
 	return typeid(T).name();
 }
 
-#endif // RMLUI_USE_CUSTOM_RTTI
+#endif // RMLUI_CUSTOM_RTTI
 
 #endif // RMLUI_CORE_TRAITS_H

@@ -140,14 +140,14 @@ p.title
 }
 #decorators button.gradient
 {
-	decorator: gradient( vertical #415857 #5990A3 );
+	decorator: vertical-gradient( #415857 #5990A3 );
 	border: 3dp #415857;
 	border-radius: 8dp;
 	margin-right: 12dp;
 }
 #decorators button.gradient.horizontal
 {
-	decorator: gradient( horizontal #DB6565 #F1B58A );
+	decorator: horizontal-gradient( #DB6565 #F1B58A );
 	border-color: #DB6565;
 }
 #decorators button.gradient:hover
@@ -199,12 +199,15 @@ p.title
 	border: 1dp #777;
 	font-effect: shadow( 1dp 1dp #333 );
 }
+.image-mode.repeat > div {
+	height: 120dp;
+}
 #decorators .image-mode > div > p
 {
 	margin: -2em 0 0 0;
 	text-align: center;
 }
-.image-mode.small { margin-top: -20dp; }
+.image-mode.small { margin-top: -15dp; }
 .image-mode.small > div
 {
 	width: 40dp;
@@ -223,6 +226,9 @@ p.title
 .fit-cover      { decorator: image( icon-invader cover      ); }
 .fit-scale-none { decorator: image( icon-invader scale-none ); }
 .fit-scale-down { decorator: image( icon-invader scale-down ); }
+.fit-repeat   { decorator: image( /assets/alien_small.tga repeat ); }
+.fit-repeat-x { decorator: image( /assets/alien_small.tga repeat-x ); }
+.fit-repeat-y { decorator: image( /assets/alien_small.tga repeat-y ); }
 .orientation-vertical   { decorator: image( icon-invader flip-vertical   scale-none ); }
 .orientation-horizontal { decorator: image( icon-invader flip-horizontal scale-none ); }
 .orientation-rotate     { decorator: image( icon-invader rotate-180      scale-none ); }
@@ -354,7 +360,7 @@ p.title
 	margin-left: -20dp;
 	width: 40dp;
 	height: 200dp;
-	decorator: gradient( vertical #daf0 #fef6 );
+	decorator: vertical-gradient( #daf0 #fef6 );
 }
 #transition:hover .ray
 {
@@ -596,6 +602,14 @@ progress {
 {
 	height: 12dp;
 }
+form input, form textarea, form select
+{
+	nav: vertical;
+}
+form .nav-auto, form input.checkbox, form input.radio
+{
+	nav: auto;
+}
 </style>
 </head>
 
@@ -681,7 +695,7 @@ progress {
 
 	<p>Let us define the outer sprite by the following image, and the inner sprite as the part within the displayed border.</p>
 	<div style="position: relative; text-align: left; width: 145dp;">
-		<img sprite="textarea"/><img sprite="textarea-inner" style="position: absolute; left: 10dp; top: 13dp; border: 1dp #f0f;"/>
+		<img sprite="textarea"/><img sprite="textarea-inner" style="position: absolute; left: 10dp; top: 12dp; border: 1dp #f0f;"/>
 	</div>
 
 	<p>When the ninepatch decorator is applied and the element is stretched, the following is rendered.</p>
@@ -709,6 +723,11 @@ progress {
 			<div class="fit-scale-none"></div>
 			<div class="fit-scale-down"></div>
 		</div>
+		<div class="image-mode repeat">
+			<div class="fit-repeat"><p>repeat</p></div>
+			<div class="fit-repeat-x"><p>repeat-x</p></div>
+			<div class="fit-repeat-y"><p>repeat-y</p></div>
+		</div>
 		<h1>Image decorator alignment modes</h1>
 		<div class="image-mode">
 			<div class="align-default"><p style="font-style: italic;">default</p></div>
@@ -721,6 +740,7 @@ progress {
 		<h1>Tiled decorators orientation</h1>
 		<p>Orientation can be applied to every tile individually in the 'image', 'tiled-horizontal', 'tiled-vertical', and 'tiled-box' decorators.</p>
 		<div class="image-mode">
+			<div class="align-default"><p style="font-style: italic;">default</p></div>
 			<div class="orientation-vertical"><p>flip-vertical</p></div>
 			<div class="orientation-horizontal"><p>flip-horizontal</p></div>
 			<div class="orientation-rotate"><p>rotate-180</p></div>
@@ -825,21 +845,21 @@ progress {
 		</div>
 		<h2>Email and password</h2>
 		<div>
-			<input type="text" name="email"/>
-			<input type="password" name="password"/>
+			<input type="text" name="email" class="nav-auto"/>
+			<input type="password" name="password" class="nav-auto"/>
 		</div>
 		<h2>Favorite animal</h2>
 		<div>
 			<label><input type="radio" name="animal" value="dog" checked/> Dog </label>
 			<label><input type="radio" name="animal" value="cat"/> Cat </label>
 			<label><input type="radio" name="animal" value="narwhal"/> Narwhal </label>
-			<label><input type="radio" name="animal" value="no"/> I don't like animals </label>
+			<label><input type="radio" name="animal" value="no" style="nav-down: #lasagne"/> I don't like animals </label>
 		</div>
 		<h2>Favorite meals</h2>
 		<div>
 			<label><input type="checkbox" name="meals" value="pizza" checked/> Pizza </label>
 			<label><input type="checkbox" name="meals" value="pasta" checked/> Pasta </label>
-			<label><input type="checkbox" name="meals" value="lasagne" checked/> Lasagne </label>
+			<label><input type="checkbox" name="meals" value="lasagne" id="lasagne" checked/> Lasagne </label>
 		</div>
 		<h2>Rating</h2>
 		<div>

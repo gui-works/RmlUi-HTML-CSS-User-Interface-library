@@ -40,10 +40,10 @@ namespace Rml {
 
 BlockContainer::BlockContainer(ContainerBox* _parent_container, FloatedBoxSpace* _space, Element* _element, const Box& _box, float _min_height,
 	float _max_height) :
-	ContainerBox(Type::BlockContainer, _element, _parent_container),
-	box(_box), min_height(_min_height), max_height(_max_height), space(_space)
+	ContainerBox(Type::BlockContainer, _element, _parent_container), box(_box), min_height(_min_height), max_height(_max_height), space(_space)
 {
 	RMLUI_ASSERT(element);
+	RMLUI_ASSERT(box.GetSize().x >= 0.f);
 
 	if (!space)
 	{
@@ -362,7 +362,7 @@ float BlockContainer::GetShrinkToFitWidth() const
 	if (computed.width().type == Style::Width::Length)
 	{
 		// We have a definite width, so use that size.
-		content_width = computed.width().value;
+		content_width = box.GetSize().x;
 	}
 	else
 	{
@@ -460,7 +460,7 @@ InlineContainer* BlockContainer::GetOpenInlineContainer()
 const InlineContainer* BlockContainer::GetOpenInlineContainer() const
 {
 	if (!child_boxes.empty() && child_boxes.back()->GetType() == Type::InlineContainer)
-		return static_cast<InlineContainer*>(child_boxes.back().get());
+		return rmlui_static_cast<InlineContainer*>(child_boxes.back().get());
 	return nullptr;
 }
 

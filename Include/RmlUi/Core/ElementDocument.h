@@ -39,21 +39,21 @@ class DocumentHeader;
 class ElementText;
 class StyleSheet;
 class StyleSheetContainer;
+enum class NavigationSearchDirection;
 
-/**
-     ModalFlag used for controlling the modal state of the document.
-        None:  Remove modal state.
-        Modal: Set modal state, other documents cannot receive focus.
-        Keep:  Modal state unchanged.
-
-    FocusFlag used for displaying the document.
-        None:     No focus.
-        Document: Focus the document.
-        Keep:     Focus the element in the document which last had focus.
-        Auto:     Focus the first tab element with the 'autofocus' attribute or else the document.
-*/
-enum class ModalFlag { None, Modal, Keep };
-enum class FocusFlag { None, Document, Keep, Auto };
+/** ModalFlag controls the modal state of the document. */
+enum class ModalFlag {
+	None,  // Remove modal state.
+	Modal, // Set modal state, other documents cannot receive focus.
+	Keep,  // Modal state unchanged.
+};
+/** FocusFlag controls the focus when showing the document. */
+enum class FocusFlag {
+	None,     // No focus.
+	Document, // Focus the document.
+	Keep,     // Focus the element in the document which last had focus.
+	Auto,     // Focus the first tab element with the 'autofocus' attribute or else the document.
+};
 
 /**
     Represents a document in the dom tree.
@@ -148,11 +148,18 @@ protected:
 	/// Called during update if the element size has been changed.
 	void OnResize() override;
 
+	/// Returns whether the document can receive focus during click when another document is modal.
+	bool IsFocusableFromModal() const;
+	/// Sets whether the document can receive focus when another document is modal.
+	void SetFocusableFromModal(bool focusable);
+
 private:
 	/// Find the next element to focus, starting at the current element
 	Element* FindNextTabElement(Element* current_element, bool forward);
 	/// Searches forwards or backwards for a focusable element in the given substree
 	Element* SearchFocusSubtree(Element* element, bool forward);
+	/// Find the next element to navigate to, starting at the current element.
+	Element* FindNextNavigationElement(Element* current_element, NavigationSearchDirection direction, const Property& property);
 
 	/// Sets the dirty flag on the layout so the document will format its children before the next render.
 	void DirtyLayout() override;
@@ -173,23 +180,17 @@ private:
 	/// Sets the dirty flag for document positioning
 	void DirtyPosition();
 
-	// Title of the document
 	String title;
-
-	// The original path this document came from
 	String source_url;
 
-	// The document's style sheet container.
 	SharedPtr<StyleSheetContainer> style_sheet_container;
 
 	Context* context;
 
-	// Is the current display modal
 	bool modal;
+	bool focusable_from_modal;
 
-	// Is the layout dirty?
 	bool layout_dirty;
-
 	bool position_dirty;
 
 	friend class Rml::Context;

@@ -46,6 +46,8 @@ class DataModel;
 class DataModelConstructor;
 class DataTypeRegister;
 class ScrollController;
+class RenderManager;
+class TextInputHandler;
 enum class EventId : uint16_t;
 
 /**
@@ -56,10 +58,11 @@ enum class EventId : uint16_t;
 
 class RMLUICORE_API Context : public ScriptInterface {
 public:
-	/// Constructs a new, uninitialised context. This should not be called directly, use CreateContext()
-	/// instead.
+	/// Constructs a new, uninitialised context. This should not be called directly, use CreateContext() instead.
 	/// @param[in] name The name of the context.
-	Context(const String& name);
+	/// @param[in] render_manager The render manager used for this context.
+	/// @param[in] text_input_handler The text input handler used for this context.
+	Context(const String& name, RenderManager* render_manager, TextInputHandler* text_input_handler);
 	/// Destroys a context.
 	virtual ~Context();
 
@@ -74,10 +77,10 @@ public:
 	/// @return The current dimensions of the context.
 	Vector2i GetDimensions() const;
 
-	/// Changes the size ratio of 'dp' unit to 'px' unit
+	/// Changes the ratio of the 'dp' unit to the 'px' unit.
 	/// @param[in] dp_ratio The new density-independent pixel ratio of the context.
-	void SetDensityIndependentPixelRatio(float density_independent_pixel_ratio);
-	/// Returns the size ratio of 'dp' unit to 'px' unit
+	void SetDensityIndependentPixelRatio(float dp_ratio);
+	/// Returns the ratio of the 'dp' unit to the 'px' unit.
 	/// @return The current density-independent pixel ratio of the context.
 	float GetDensityIndependentPixelRatio() const;
 
@@ -115,7 +118,7 @@ public:
 
 	/// Enable or disable handling of the mouse cursor from this context.
 	/// When enabled, changes to the cursor name is transmitted through the system interface.
-	/// @param[in] show True to enable mouse cursor handling, false to disable.
+	/// @param[in] enable True to enable mouse cursor handling, false to disable.
 	void EnableMouseCursor(bool enable);
 
 	/// Activate or deactivate a media theme. Themes can be used in RCSS media queries.
@@ -246,14 +249,11 @@ public:
 	/// @param[in] speed_factor A factor for adjusting the final smooth scrolling speed, must be strictly positive, defaults to 1.0.
 	void SetDefaultScrollBehavior(ScrollBehavior scroll_behavior, float speed_factor);
 
-	/// Gets the current clipping region for the render traversal
-	/// @param[out] origin The clipping origin
-	/// @param[out] dimensions The clipping dimensions
-	bool GetActiveClipRegion(Vector2i& origin, Vector2i& dimensions) const;
-	/// Sets the current clipping region for the render traversal
-	/// @param[out] origin The clipping origin
-	/// @param[out] dimensions The clipping dimensions
-	void SetActiveClipRegion(Vector2i origin, Vector2i dimensions);
+	/// Retrieves the render manager which can be used to submit changes to the render state.
+	RenderManager& GetRenderManager();
+
+	/// Obtains the text input handler.
+	TextInputHandler* GetTextInputHandler() const;
 
 	/// Sets the instancer to use for releasing this object.
 	/// @param[in] instancer The context's instancer.
@@ -305,8 +305,11 @@ protected:
 private:
 	String name;
 	Vector2i dimensions;
-	float density_independent_pixel_ratio;
+	float density_independent_pixel_ratio = 1.f;
 	String documents_base_tag = "body";
+
+	// Wrapper around the render interface for tracking the render state.
+	RenderManager* render_manager;
 
 	SmallUnorderedSet<String> active_themes;
 
@@ -369,22 +372,21 @@ private:
 	// itself can't be part of it.
 	ElementSet drag_hover_chain;
 
-	Vector2i clip_origin;
-	Vector2i clip_dimensions;
-
 	using DataModels = UnorderedMap<String, UniquePtr<DataModel>>;
 	DataModels data_models;
 
 	UniquePtr<DataTypeRegister> default_data_type_register;
 
+	TextInputHandler* text_input_handler;
+
 	// Time in seconds until Update and Render should be called again. This allows applications to only redraw the ui if needed.
 	// See RequestNextUpdate() and NextUpdateRequested() for details.
-	double next_update_timeout;
+	double next_update_timeout = 0;
 
 	// Internal callback for when an element is detached or removed from the hierarchy.
 	void OnElementDetach(Element* element);
 	// Internal callback for when a new element gains focus.
-	bool OnFocusChange(Element* element);
+	bool OnFocusChange(Element* element, bool focus_visible);
 
 	// Generates an event for faking clicks on an element.
 	void GenerateClickEvent(Element* element);

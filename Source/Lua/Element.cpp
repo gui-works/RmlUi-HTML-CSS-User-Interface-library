@@ -101,11 +101,17 @@ int ElementAppendChild(lua_State* L, Element* obj)
 {
 	ElementPtr* element = LuaType<ElementPtr>::check(L, 1);
 	if (*element)
-		obj->AppendChild(std::move(*element));
+	{
+		Element* child = obj->AppendChild(std::move(*element));
+		LuaType<Element>::push(L, child, false);
+	}
 	else
+	{
 		Log::Message(Log::LT_WARNING, "Could not append child to element '%s', as the child was null. Was it already moved from?",
 			obj->GetAddress().c_str());
-	return 0;
+		lua_pushnil(L);
+	}
+	return 1;
 }
 
 int ElementBlur(lua_State* /*L*/, Element* obj)
@@ -205,6 +211,13 @@ int ElementQuerySelectorAll(lua_State* L, Element* obj)
 	return 1;
 }
 
+int ElementMatches(lua_State* L, Element* obj)
+{
+	const char* tag = luaL_checkstring(L, 1);
+	lua_pushboolean(L, obj->Matches(tag));
+	return 1;
+}
+
 int ElementHasAttribute(lua_State* L, Element* obj)
 {
 	const char* name = luaL_checkstring(L, 1);
@@ -223,11 +236,17 @@ int ElementInsertBefore(lua_State* L, Element* obj)
 	ElementPtr* element = LuaType<ElementPtr>::check(L, 1);
 	Element* adjacent = LuaType<Element>::check(L, 2);
 	if (*element)
-		obj->InsertBefore(std::move(*element), adjacent);
+	{
+		Element* inserted = obj->InsertBefore(std::move(*element), adjacent);
+		LuaType<Element>::push(L, inserted, false);
+	}
 	else
+	{
 		Log::Message(Log::LT_WARNING, "Could not insert child to element '%s', as the child was null. Was it already moved from?",
 			obj->GetAddress().c_str());
-	return 0;
+		lua_pushnil(L);
+	}
+	return 1;
 }
 
 int ElementIsClassSet(lua_State* L, Element* obj)
@@ -582,6 +601,7 @@ RegType<Element> ElementMethods[] = {
 	RMLUI_LUAMETHOD(Element, GetElementsByTagName),
 	RMLUI_LUAMETHOD(Element, QuerySelector),
 	RMLUI_LUAMETHOD(Element, QuerySelectorAll),
+	RMLUI_LUAMETHOD(Element, Matches),
 	RMLUI_LUAMETHOD(Element, HasAttribute),
 	RMLUI_LUAMETHOD(Element, HasChildNodes),
 	RMLUI_LUAMETHOD(Element, InsertBefore),

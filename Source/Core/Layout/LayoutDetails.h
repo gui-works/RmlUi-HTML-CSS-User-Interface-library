@@ -89,8 +89,8 @@ public:
 
 	/// Returns the containing block for a box.
 	/// @param[in] parent_container The parent container of the current box.
-	/// @param[in] child_position The position property of the current box.
-	/// @return The containing block box and size, possibly indefinite along one or both axes.
+	/// @param[in] position The position property of the current box.
+	/// @return The containing block box and size, possibly indefinite (represented by negative size) along one or both axes.
 	static ContainingBlock GetContainingBlock(ContainerBox* parent_container, Style::Position position);
 
 	/// Builds margins of a Box, and resolves any auto width or height for non-inline elements. The height may be left unresolved if it depends on the
@@ -118,6 +118,11 @@ public:
 		const ComputedAxisSize& computed_size, float base_value);
 
 	static String GetDebugElementName(Element* element);
+
+	static bool IsScrollContainer(Style::Overflow overflow_x, Style::Overflow overflow_y)
+	{
+		return overflow_x != Style::Overflow::Visible || overflow_y != Style::Overflow::Visible;
+	}
 
 private:
 	/// Calculates and returns the content size for replaced elements.

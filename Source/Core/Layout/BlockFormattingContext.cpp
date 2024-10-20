@@ -116,9 +116,9 @@ UniquePtr<LayoutBox> BlockFormattingContext::Format(ContainerBox* parent_contain
 {
 	RMLUI_ASSERT(parent_container && element);
 
-#ifdef RMLUI_ENABLE_PROFILING
+#ifdef RMLUI_TRACY_PROFILING
 	RMLUI_ZoneScopedC(0xB22222);
-	auto name = CreateString(80, "%s %x", element->GetAddress(false, false).c_str(), element);
+	auto name = CreateString("%s %x", element->GetAddress(false, false).c_str(), element);
 	RMLUI_ZoneName(name.c_str(), name.size());
 #endif
 
@@ -212,9 +212,9 @@ bool BlockFormattingContext::FormatInlineBox(BlockContainer* parent_container, E
 
 bool BlockFormattingContext::FormatBlockContainerChild(BlockContainer* parent_container, Element* element)
 {
-#ifdef RMLUI_ENABLE_PROFILING
+#ifdef RMLUI_TRACY_PROFILING
 	RMLUI_ZoneScoped;
-	auto name = CreateString(80, ">%s %x", element->GetAddress(false, false).c_str(), element);
+	auto name = CreateString(">%s %x", element->GetAddress(false, false).c_str(), element);
 	RMLUI_ZoneName(name.c_str(), name.size());
 #endif
 

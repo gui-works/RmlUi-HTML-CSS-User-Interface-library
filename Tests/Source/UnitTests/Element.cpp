@@ -166,7 +166,12 @@ TEST_CASE("Element")
 	context->Update();
 	context->Render();
 
-	TestsShell::RenderLoop();
+	Element* div = document->GetFirstChild();
+	Element* span = div->GetChild(1);
+	REQUIRE(div);
+	REQUIRE(div->GetTagName() == "div");
+	REQUIRE(span);
+	REQUIRE(span->GetTagName() == "span");
 
 	SUBCASE("Attribute")
 	{
@@ -258,21 +263,21 @@ TEST_CASE("Element")
 	SUBCASE("CloneManual")
 	{
 		Element* element = document->GetFirstChild();
-		REQUIRE(element->GetProperty<String>("background-color") == "255, 0, 0, 255");
-		CHECK(element->Clone()->GetProperty<String>("background-color") == "255, 0, 0, 255");
+		REQUIRE(element->GetProperty<String>("background-color") == "#ff0000");
+		CHECK(element->Clone()->GetProperty<String>("background-color") == "#ff0000");
 
 		element->SetProperty("background-color", "#0f0");
-		CHECK(element->Clone()->GetProperty<String>("background-color") == "0, 255, 0, 255");
+		CHECK(element->Clone()->GetProperty<String>("background-color") == "#00ff00");
 
 		element->RemoveProperty("background-color");
 		Element* clone = document->AppendChild(element->Clone());
 		context->Update();
-		CHECK(clone->GetProperty<String>("background-color") == "255, 255, 255, 255");
+		CHECK(clone->GetProperty<String>("background-color") == "#ffffff");
 
 		element->SetClass("blue", true);
 		clone = document->AppendChild(element->Clone());
 		context->Update();
-		CHECK(clone->GetProperty<String>("background-color") == "0, 0, 255, 255");
+		CHECK(clone->GetProperty<String>("background-color") == "#0000ff");
 	}
 
 	SUBCASE("SetInnerRML")
@@ -290,6 +295,46 @@ TEST_CASE("Element")
 		CHECK(element_ptr->GetInnerRML() == "");
 		element_ptr->SetInnerRML("text");
 		CHECK(element_ptr->GetInnerRML() == "text");
+	}
+
+	SUBCASE("GetInnerRML")
+	{
+		String inner_rml;
+
+		inner_rml = document->GetInnerRML();
+		CHECK(inner_rml == R"(<div style="background-color: #ff0000;">This is a <span>sample</span>.</div>)");
+
+		div->SetProperty("background-color", "white");
+		inner_rml = document->GetInnerRML();
+		CHECK(inner_rml == R"(<div style="background-color: #ffffff;">This is a <span>sample</span>.</div>)");
+
+		div->RemoveProperty("background-color");
+		inner_rml = document->GetInnerRML();
+		CHECK(inner_rml == R"(<div>This is a <span>sample</span>.</div>)");
+
+		div->SetProperty("cursor", "x<y");
+		inner_rml = document->GetInnerRML();
+		CHECK(inner_rml == R"(<div style="cursor: x&lt;y;">This is a <span>sample</span>.</div>)");
+
+		span->SetProperty("font-weight", "bold");
+		inner_rml = document->GetInnerRML();
+		CHECK(inner_rml == R"(<div style="cursor: x&lt;y;">This is a <span style="font-weight: bold;">sample</span>.</div>)");
+	}
+
+	SUBCASE("InsertBefore")
+	{
+		String inner_rml;
+
+		inner_rml = document->GetInnerRML();
+		CHECK(inner_rml == R"(<div style="background-color: #ff0000;">This is a <span>sample</span>.</div>)");
+
+		div->InsertBefore(document->CreateElement("img"), span);
+		inner_rml = document->GetInnerRML();
+		CHECK(inner_rml == R"(<div style="background-color: #ff0000;">This is a <img /><span>sample</span>.</div>)");
+
+		div->InsertBefore(document->CreateElement("button"), nullptr)->SetInnerRML("Click me");
+		inner_rml = document->GetInnerRML();
+		CHECK(inner_rml == R"(<div style="background-color: #ff0000;">This is a <img /><span>sample</span>.<button>Click me</button></div>)");
 	}
 
 	document->Close();
@@ -314,7 +359,7 @@ TEST_CASE("Element.ScrollIntoView")
 	{
 		for (int j = 0; j < 4; ++j)
 		{
-			cells[i][j] = document->GetElementById(CreateString(8, "cell%d%d", i, j));
+			cells[i][j] = document->GetElementById(CreateString("cell%d%d", i, j));
 			REQUIRE(cells[i][j]);
 		}
 	}

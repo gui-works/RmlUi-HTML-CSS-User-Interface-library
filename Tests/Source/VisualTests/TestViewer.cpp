@@ -182,6 +182,19 @@ bool TestViewer::IsHelpVisible() const
 	return document_help->IsVisible();
 }
 
+bool TestViewer::IsNavigationLocked() const
+{
+	if (Element* element = context->GetFocusElement())
+	{
+		if (document_test && element->GetOwnerDocument() == document_test)
+		{
+			if (document_test->HasAttribute("lock-navigation"))
+				return true;
+		}
+	}
+	return false;
+}
+
 bool TestViewer::LoadTest(const Rml::String& directory, const Rml::String& filename, int test_index, int number_of_tests, int filtered_test_index,
 	int filtered_number_of_tests, int suite_index, int number_of_suites, bool keep_scroll_position)
 {
@@ -255,7 +268,7 @@ bool TestViewer::LoadTest(const Rml::String& directory, const Rml::String& filen
 		RMLUI_ASSERT(description_header);
 
 		description_header->SetInnerRML(
-			CreateString(512, "Test suite %d of %d<br/>Test %d of %d<br/>", suite_index + 1, number_of_suites, test_index + 1, number_of_tests));
+			CreateString("Test suite %d of %d<br/>Test %d of %d<br/>", suite_index + 1, number_of_suites, test_index + 1, number_of_tests));
 	}
 
 	// Description Filter
@@ -265,9 +278,9 @@ bool TestViewer::LoadTest(const Rml::String& directory, const Rml::String& filen
 		if (filtered_number_of_tests == 0)
 			description_filter_text->SetInnerRML("No matches");
 		else if (filtered_number_of_tests < number_of_tests && filtered_test_index >= 0)
-			description_filter_text->SetInnerRML(CreateString(128, "Filtered %d of %d", filtered_test_index + 1, filtered_number_of_tests));
+			description_filter_text->SetInnerRML(CreateString("Filtered %d of %d", filtered_test_index + 1, filtered_number_of_tests));
 		else if (filtered_number_of_tests < number_of_tests && filtered_test_index < 0)
-			description_filter_text->SetInnerRML(CreateString(128, "Filtered X of %d", filtered_number_of_tests));
+			description_filter_text->SetInnerRML(CreateString("Filtered X of %d", filtered_number_of_tests));
 		else
 			description_filter_text->SetInnerRML("");
 	}
@@ -275,7 +288,7 @@ bool TestViewer::LoadTest(const Rml::String& directory, const Rml::String& filen
 	// Description Content
 	{
 		String rml_description =
-			Rml::CreateString(512, "<h1>%s</h1><p><a href=\"%s\">%s</a>", document_test->GetTitle().c_str(), test_path.c_str(), filename.c_str());
+			Rml::CreateString("<h1>%s</h1><p><a href=\"%s\">%s</a>", document_test->GetTitle().c_str(), test_path.c_str(), filename.c_str());
 
 		if (!reference_filename.empty())
 		{

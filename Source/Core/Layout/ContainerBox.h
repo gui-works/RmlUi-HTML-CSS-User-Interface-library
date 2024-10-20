@@ -43,8 +43,6 @@ namespace Rml {
 */
 class ContainerBox : public LayoutBox {
 public:
-	bool IsScrollContainer() const { return overflow_x != Style::Overflow::Visible || overflow_y != Style::Overflow::Visible; }
-
 	// Enable or disable scrollbars for the element we represent, preparing it for the first round of layouting, according to our properties.
 	void ResetScrollbars(const Box& box);
 
@@ -55,8 +53,11 @@ public:
 
 	ContainerBox* GetParent() { return parent_container; }
 	Element* GetElement() { return element; }
-	Style::Position GetPositionProperty() const { return position_property; }
-	bool HasLocalTransformOrPerspective() const { return has_local_transform_or_perspective; }
+
+	bool IsScrollContainer() const;
+
+	// Returns true if this box acts as a containing block for absolutely positioned descendants.
+	bool IsAbsolutePositioningContainingBlock() const { return is_absolute_positioning_containing_block; }
 
 protected:
 	ContainerBox(Type type, Element* element, ContainerBox* parent_container);
@@ -99,8 +100,7 @@ private:
 
 	Style::Overflow overflow_x = Style::Overflow::Visible;
 	Style::Overflow overflow_y = Style::Overflow::Visible;
-	Style::Position position_property = Style::Position::Static;
-	bool has_local_transform_or_perspective = false;
+	bool is_absolute_positioning_containing_block = false;
 
 	ContainerBox* parent_container = nullptr;
 };
@@ -131,6 +131,8 @@ public:
 	// @returns True if it succeeds, otherwise false if it needs to be formatted again because scrollbars were enabled.
 	bool Close(const Vector2f content_overflow_size, const Box& box, float element_baseline);
 
+	float GetShrinkToFitWidth() const override;
+
 	const Box* GetIfBox() const override { return &box; }
 	String DebugDumpTree(int depth) const override;
 
@@ -151,6 +153,8 @@ public:
 
 	// Submits the formatted box to the table element, and propagates any uncaught overflow to this box.
 	void Close(const Vector2f content_overflow_size, const Box& box, float element_baseline);
+
+	float GetShrinkToFitWidth() const override;
 
 	const Box* GetIfBox() const override { return &box; }
 	String DebugDumpTree(int depth) const override;

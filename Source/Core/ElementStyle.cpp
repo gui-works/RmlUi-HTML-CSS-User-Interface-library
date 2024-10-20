@@ -44,7 +44,6 @@
 #include "../../Include/RmlUi/Core/StyleSheetSpecification.h"
 #include "../../Include/RmlUi/Core/TransformPrimitive.h"
 #include "ComputeProperty.h"
-#include "ElementDecoration.h"
 #include "ElementDefinition.h"
 #include "PropertiesIterator.h"
 #include <algorithm>
@@ -365,7 +364,7 @@ static float ComputeLength(NumericValue value, Element* element)
 		if (ElementDocument* document = element->GetOwnerDocument())
 			doc_font_size = document->GetComputedValues().font_size();
 		else
-			doc_font_size = DefaultComputedValues.font_size();
+			doc_font_size = DefaultComputedValues().font_size();
 		break;
 	case Unit::VW:
 	case Unit::VH:
@@ -420,7 +419,7 @@ float ElementStyle::ResolveRelativeLength(NumericValue value, RelativeTarget rel
 	case RelativeTarget::ParentFontSize:
 	{
 		auto p = element->GetParentNode();
-		base_value = (p ? p->GetComputedValues().font_size() : DefaultComputedValues.font_size());
+		base_value = (p ? p->GetComputedValues().font_size() : DefaultComputedValues().font_size());
 	}
 	break;
 	case RelativeTarget::LineHeight: base_value = element->GetLineHeight(); break;
@@ -531,13 +530,13 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values, const S
 		// If we skipped this, the old dirty value would be unmodified, instead, now it is set to its default value.
 		// Strictly speaking, we only really need to do this for the dirty, non-inherited values. However, in most
 		// cases it seems simply assigning all non-inherited values is faster than iterating the dirty properties.
-		values.CopyNonInherited(DefaultComputedValues);
+		values.CopyNonInherited(DefaultComputedValues());
 	}
 
 	if (parent_values)
 		values.CopyInherited(*parent_values);
 	else if (!values_are_default_initialized)
-		values.CopyInherited(DefaultComputedValues);
+		values.CopyInherited(DefaultComputedValues());
 
 	bool dirty_em_properties = false;
 
@@ -561,7 +560,7 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values, const S
 	}
 
 	const float font_size = values.font_size();
-	const float document_font_size = (document_values ? document_values->font_size() : DefaultComputedValues.font_size());
+	const float document_font_size = (document_values ? document_values->font_size() : DefaultComputedValues().font_size());
 
 	// Since vertical-align depends on line-height we compute this before iteration
 	if (dirty_properties.Contains(PropertyId::LineHeight))
@@ -847,13 +846,33 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values, const S
 			break;
 
 		case PropertyId::Decorator:
-			values.has_decorator(p->unit == Unit::DECORATOR);
+			values.has_decorator(p->unit == Unit::DECORATOR && p->value.GetType() == Variant::DECORATORSPTR && p->value.GetReference<DecoratorsPtr>());
+			break;
+		case PropertyId::MaskImage:
+			values.has_mask_image(p->unit == Unit::DECORATOR && p->value.GetType() == Variant::DECORATORSPTR && p->value.GetReference<DecoratorsPtr>());
 			break;
 		case PropertyId::FontEffect:
-			values.has_font_effect((p->unit == Unit::FONTEFFECT));
+			values.has_font_effect(p->unit == Unit::FONTEFFECT && p->value.GetType() == Variant::FONTEFFECTSPTR && p->value.GetReference<FontEffectsPtr>());
 			break;
+		case PropertyId::Filter:
+			values.has_filter(p->unit == Unit::FILTER && p->value.GetType() == Variant::FILTERSPTR && p->value.GetReference<FiltersPtr>());
+			break;
+		case PropertyId::BackdropFilter:
+			values.has_backdrop_filter(p->unit == Unit::FILTER && p->value.GetType() == Variant::FILTERSPTR && p->value.GetReference<FiltersPtr>());
+			break;
+		case PropertyId::BoxShadow:
+			values.has_box_shadow(p->unit == Unit::BOXSHADOWLIST && p->value.GetType() == Variant::BOXSHADOWLIST && !p->value.GetReference<BoxShadowList>().empty());
+			break;
+
 		case PropertyId::FlexBasis:
 			values.flex_basis(ComputeLengthPercentageAuto(p, font_size, document_font_size, dp_ratio, vp_dimensions));
+			break;
+
+		case PropertyId::RmlUi_Language:
+			values.language(p->Get<String>());
+			break;
+		case PropertyId::RmlUi_Direction:
+			values.direction(p->Get<Direction>());
 			break;
 
 		// Fetched from element's properties.
@@ -868,6 +887,12 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values, const S
 		case PropertyId::FlexShrink:
 		case PropertyId::FlexWrap:
 		case PropertyId::JustifyContent:
+			break;
+		// Navigation properties. Must be manually retrieved with 'GetProperty()'.
+		case PropertyId::NavUp:
+		case PropertyId::NavDown:
+		case PropertyId::NavLeft:
+		case PropertyId::NavRight:
 			break;
 		// Unhandled properties. Must be manually retrieved with 'GetProperty()'.
 		case PropertyId::FillImage:
